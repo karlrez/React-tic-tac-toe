@@ -1,69 +1,102 @@
-.body {
-  
+body {
+    background-color: #F6F5F4;
 }
 
 .wrapper {
-  background-color: #F6F5F4;
-  color: #27213A;
-  border: 1px solid black;
-  margin: 50px auto 0 auto;
-  align-items: center;
-  text-align: center;
-  width: 50%;
-  height: 50%;
+    background-color: #F6F5F4;
+    color: #27213A;
+    margin: 50px auto 0 auto;
+    align-items: center;
+    text-align: center;
+    height: 100%;
 }
 
 td {
-  width: 100px;
-  height: 100px;
+    width: 100px;
+    height: 100px;
 }
+
 table {
-  margin-left: auto;
-  margin-right: auto;
+    margin-left: auto;
+    margin-right: auto;
 }
+
 .vert {
-  border-left: 2px solid black;
-  border-right: 2px solid black;
+    border-left: 2px solid black;
+    border-right: 2px solid black;
 }
+
 .hori {
-  border-top: 2px solid black;
-  border-bottom: 2px solid black;
+    border-top: 2px solid black;
+    border-bottom: 2px solid black;
 }
 
 .square {
-  font-size: 50px;
-
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: #F6F5F4;
+    border: none;
+    font-size: 50px;
+    color: red;
 }
 
 .square:hover {
-
+    background-color: #bcd6e9;
 }
 
 .scoreboard {
-  border: 1px solid black;
-  margin-top: 50px;
-  text-align: left;
+    border: 2px solid black;
+    margin-top: 50px;
+    text-align: left;
 }
 
 .scoreList {
-  list-style: none;
+    list-style: none;
 }
 
 .playAgainBtn {
-  margin: 20px auto 0 auto;
-  width: auto;
-  font-size: 25px;
+    margin-top: 20px;
+    border: none;
+    background-color: inherit;
+
+    animation-name: heartbeat;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-duration: 3s;
+    animation-direction: alternate;
 }
 
 .playAgainBtn:hover {
-  transform: scale(1.10);
+    transform: scale(1.10);
+    background-color: #bcd6e9;
 }
 
-.refreshBtn {
-  width: 150px;
-  font-size: 12px;
+@keyframes heartbeat {
+  0% {
+    transform: scale( .5 );
+  }
+
+  100% {
+    transform: scale( 1 );
+  }
 }
 
-.refreshBtn:hover {
-  transform: scale(1.10);
+/* for tablets */
+
+@media only screen and (min-width: 600px) {
+    .wrapper {
+        width: 80%;
+        height: 100%;
+    }
+}
+
+
+/* for desktop */
+
+@media only screen and (min-width: 1025px) {
+    .wrapper {
+        width: 50%;
+        height: 50%;
+    }
 }

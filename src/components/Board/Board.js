@@ -6,7 +6,6 @@ import Square from '../Square/Square';
 //import Modal from '../../UI/Modal/Modal';
 import classes from '../Board/Board.module.css';
 import refreshIcon from '../../Assets/refresh.png';
-import refreshCloudIcon from '../../Assets/refreshIcon.png';
 
 class Board extends Component {
     constructor(props) {
@@ -102,12 +101,30 @@ class Board extends Component {
                 return;
             }
 
-            // Computer makes move
-            let randNum = 0;
-            do {
-                randNum = Math.floor(Math.random() * 9);
+            // Computer makes move 
+            // take center square if available
+            let randNum = 4;
+            if (squares[randNum] == null) {
+
             }
-            while (squares[randNum] != null);
+            // second option is take a corner value
+            else {
+                let cornerPicked = false;
+                const corners = this.shuffle([0, 2, 6, 8]);
+                for (i = 0; i < 4; i++) {
+                    randNum = corners[i]
+                    if (squares[randNum] == null) {
+                        cornerPicked = true;
+                        break;
+                    }
+                }
+                if (!cornerPicked) {
+                    do {
+                        randNum = Math.floor(Math.random() * 9);
+                    }
+                    while (squares[randNum] != null);
+                }
+            }
 
             squares[randNum] = 'O';
             this.setState({
@@ -115,6 +132,18 @@ class Board extends Component {
                 xIsNext: true
             });
         }
+    }
+
+    /**
+ * Shuffles array in place. ES6 version - https://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array
+ * @param {Array} a items An array containing the items.
+ */
+    shuffle(a) {
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
     }
 
     getScore() {
@@ -163,6 +192,7 @@ class Board extends Component {
         this.setState({
             squares: Array(9).fill(null),
             xIsNext: true,
+            score: update
         })
     }
 
@@ -182,7 +212,7 @@ class Board extends Component {
             status = (this.state.xIsNext ? 'X' : 'O') + "'s turn";
         }
 
-        let playAgainBtn = showPlayAgain ? <button className={classes.playAgainBtn} onClick={() => this.updateScore(this.state, winner)}><img src={refreshIcon} alt="play again icon" onHover="box(fds)"></img></button> : null;
+        let playAgainBtn = showPlayAgain ? <button className={classes.playAgainBtn} onClick={() => this.updateScore(this.state, winner)}><img src={refreshIcon} alt="play again icon"></img></button> : null;
         let score = 'Scores loading...';
 
         if (this.state.score) {
@@ -195,10 +225,6 @@ class Board extends Component {
                         <li><strong>Computer: </strong>{this.state.score.computer} wins ({Number.parseFloat((this.state.score.computer / this.state.score.gamesPlayed) * 100).toFixed(2)}%)</li>
                         <li><strong>Ties: </strong>{this.state.score.tie} ({Number.parseFloat((this.state.score.tie / this.state.score.gamesPlayed) * 100).toFixed(2)}%)</li>
                     </ul>
-                    <button className={classes.refreshBtn} onClick={() => this.getScore()}>
-                        <img src={refreshCloudIcon} alt='refresh icon'></img>
-                        Refresh Stats
-                    </button>
                 </div>
             );
         }
