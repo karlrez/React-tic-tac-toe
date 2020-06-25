@@ -14,6 +14,7 @@ class Board extends Component {
             squares: Array(9).fill(null),
             xIsNext: true,
             score: null,
+            winner: null
         };
     }
 
@@ -30,7 +31,7 @@ class Board extends Component {
     // slice without params returns all elements, a copy of our state
     handleClick(i) {
         const squares = this.state.squares.slice();
-        if (this.calculateWinner(squares) || squares[i]) {
+        if (this.calculateWinner(squares, true) || squares[i]) {
             return;
         }
         //setting players values
@@ -38,8 +39,10 @@ class Board extends Component {
 
         this.setState({
             squares: squares,
-            xIsNext: !this.state.xIsNext
+            xIsNext: !this.state.xIsNext,
+            winner: this.calculateWinner(squares, true)
         });
+
     }
 
     // Passing a reference to the handleClick() method so square can change
@@ -47,13 +50,13 @@ class Board extends Component {
     renderSquare(i) {
         return (
             <Square
-                className={classes.square}
+                className={this.state.squares[i] === 'X' ? classes.squarePlayer : classes.squareComputer}
                 value={this.state.squares[i]}
                 onClick={() => this.handleClick(i)} />
         );
     }
 
-    calculateWinner(squares) {
+    calculateWinner(squares, updateState) {
         const lines = [
             [0, 1, 2],
             [3, 4, 5],
@@ -67,83 +70,29 @@ class Board extends Component {
         for (let i = 0; i < lines.length; i++) {
             const [a, b, c] = lines[i];
             if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+                if (updateState) {
+                    this.setState({
+                        winner: true
+                    });
+                }
                 return squares[a];
             }
         }
-        //checking for tie
-        let emptySquares = 0;
-        for (let i = 0; i < squares.length; i++) {
-            if (squares[i] === null) {
-                emptySquares++
+        //if no winner we check if board is full and call it a tie
+        let emptySquares = false;
+        for (let i = 0; i < 9; i++) {
+            if (squares[i] == null) {
+                emptySquares = true;
             }
         }
-        if (emptySquares === 0) {
+        if (emptySquares === false) {
+            if (updateState) {
+                this.setState({
+                    winner: 'tie'
+                });
+            }
             return 'tie';
-        }
-
-        return null;
-    }
-
-    computerPlayer() {
-        const squares = this.state.squares.slice();
-
-        // check if its O's turn
-        if (!this.state.xIsNext) {
-
-            //check if board is full
-            let emptySquares = 0;
-            for (var i = 0; i < squares.length; i++) {
-                if (squares[i] == null) {
-                    emptySquares++;
-                }
-            }
-            if (emptySquares < 2) {
-                return;
-            }
-
-            // Computer makes move 
-            // take center square if available
-            let randNum = 4;
-            if (squares[randNum] == null) {
-
-            }
-            // second option is take a corner value
-            else {
-                let cornerPicked = false;
-                const corners = this.shuffle([0, 2, 6, 8]);
-                for (i = 0; i < 4; i++) {
-                    randNum = corners[i]
-                    if (squares[randNum] == null) {
-                        cornerPicked = true;
-                        break;
-                    }
-                }
-                if (!cornerPicked) {
-                    do {
-                        randNum = Math.floor(Math.random() * 9);
-                    }
-                    while (squares[randNum] != null);
-                }
-            }
-
-            squares[randNum] = 'O';
-            this.setState({
-                squares: squares,
-                xIsNext: true
-            });
-        }
-    }
-
-    /**
- * Shuffles array in place. ES6 version - https://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array
- * @param {Array} a items An array containing the items.
- */
-    shuffle(a) {
-        for (let i = a.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [a[i], a[j]] = [a[j], a[i]];
-        }
-        return a;
+        } else return null;
     }
 
     getScore() {
@@ -191,28 +140,115 @@ class Board extends Component {
 
         this.setState({
             squares: Array(9).fill(null),
-            xIsNext: true,
-            score: update
+            xIsNext: this.state.xIsNext ? true : false,
+            score: update,
+            winner: null
         })
+    }
+
+    computerPlayer() {
+        const squares = this.state.squares.slice();
+
+        // check if its O's turn
+        if (this.state.xIsNext || this.state.winner) {
+            return;
+        }
+
+        //check if board is full
+        let emptySquares = 0;
+        for (let i = 0; i < squares.length; i++) {
+            if (squares[i] == null) {
+                emptySquares++;
+            }
+        }
+        if (emptySquares < 1) {
+            return;
+        }
+
+        // AI algorithm
+        let squaresCopy = [...squares]; // spread operator to clone an array
+        let bestScore = -Infinity;
+        let bestMove;
+
+        // calling miniMax function on all empty squares (for each possible move)        
+        for (let i = 0; i < squaresCopy.length; i++) {
+            if (squaresCopy[i] == null) {
+                squaresCopy[i] = 'O';
+                let score = this.miniMax(squaresCopy, 0, false);
+                //console.log(score);
+                squaresCopy[i] = null; //undoing move
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove = i;
+                }
+            }
+        }
+        // select bestMove and set state 
+        squares[bestMove] = 'O';
+        this.setState({
+            squares: squares,
+            xIsNext: true,
+            winner: this.calculateWinner(squares, true)
+        });
+    }
+
+    miniMax(squares, depth, isMaximizing) {
+        const scores = {
+            'O': 10,
+            'X': -10,
+            'tie': 0
+        };
+        let result = this.calculateWinner(squares, false);
+
+        //console.log('depth= ' + depth + '| result= ' + result + '| scores= ' + scores[result]);
+
+        if (result !== null) {
+            return scores[result];
+        }
+
+        if (isMaximizing) {
+            let bestScore = -Infinity;
+            for (let i = 0; i < squares.length; i++) {
+                if (squares[i] == null) {
+                    squares[i] = 'O';
+                    let score = this.miniMax(squares, depth + 1, false);
+                    squares[i] = null;
+                    bestScore = Math.max(score, bestScore);
+                }
+            }
+            //console.log('(isMax)' + bestScore)
+            return bestScore;
+        } else {
+            let bestScore = Infinity;
+            for (let i = 0; i < squares.length; i++) {
+                if (squares[i] == null) {
+                    squares[i] = 'X';
+                    let score = this.miniMax(squares, depth + 1, true);
+                    squares[i] = null;
+                    bestScore = Math.min(score, bestScore);
+                }
+            }
+            //console.log('(isMin)' + bestScore)
+            return bestScore;
+        }
     }
 
     render() {
         let showPlayAgain = false;
-        const winner = this.calculateWinner(this.state.squares);
         let status;
-        if (winner) {
-            if (winner === 'tie') {
+        if (this.state.winner) {
+            if (this.state.winner === 'tie') {
                 status = "No Winner!"
                 showPlayAgain = true;
             } else {
-                status = winner + " Wins!";
+                status = this.state.winner + " Wins!";
                 showPlayAgain = true;
             }
         } else {
             status = (this.state.xIsNext ? 'X' : 'O') + "'s turn";
         }
 
-        let playAgainBtn = showPlayAgain ? <button className={classes.playAgainBtn} onClick={() => this.updateScore(this.state, winner)}><img src={refreshIcon} alt="play again icon"></img></button> : null;
+        let playAgainBtn = showPlayAgain ? <button className={classes.playAgainBtn} onClick={() => this.updateScore(this.state, this.state.winner)}><img src={refreshIcon} alt="play again icon"></img></button> : null;
         let score = 'Scores loading...';
 
         if (this.state.score) {
